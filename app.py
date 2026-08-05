@@ -1,15 +1,92 @@
-from flask import Flask
+from flask import Flask, request, jsonify
+from models.task import Task  
 
-#__name__ = '__main__'  # Esse é o nome do módulo principal da aplicação. Ele é utilizado para identificar se o módulo está sendo executado diretamente ou importado como um módulo.
 app = Flask(__name__)
 
-@app.route('/')  # Esse é o decorator que define a rota da aplicação. Ele é utilizado para mapear uma URL para uma função.
-def hello_world():  # Essa é a função que será executada quando a rota for acessada. Ela retorna uma string que será exibida no navegador.
-    return 'Hello, World!'  # Essa é a string que será exibida no navegador quando a rota for acessada.
+#CRUD - Create, Read, Update, Delete
 
-@app.route('/about')  # Esse é o decorator que define a rota da aplicação. Ele é utilizado para mapear uma URL para uma função.
-def about():  # Essa é a função que será executada quando a rota for acessada. Ela retorna uma string que será exibida no navegador.
-    return 'This is a simple Flask application.'  # Essa é a string que será exibida no navegador quando a rota for acessada.
+task_list = [] 
+task_id_control = 1
 
-if __name__ == '__main__':  # Esse é o ponto de entrada da aplicação. Ele é utilizado para verificar se o módulo está sendo executado diretamente ou importado como um módulo.
+#POST____________________________________________________________________________
+
+@app.route('/tasks', methods=['POST'])
+def create_task():
+    data = request.get_json() 
+    global task_id_control
+    new_task = Task(id=task_id_control, title=data['title'], description=data.get('description', ''))
+    task_list.append(new_task)
+    task_id_control += 1
+    print(task_list)
+    return jsonify({"message": "Nova tarefa criada com sucesso!"})
+
+#GET____________________________________________________________________________
+
+@app.route('/tasks', methods=['GET'])
+def get_tasks():
+    tasks_dict = [task.to_dict() for task in task_list]
+    output = {
+                "tasks": tasks_dict,
+                "total_tasks": len(tasks_dict)
+            }
+    
+    return jsonify(output)
+    
+#READ____________________________________________________________________________
+
+@app.route('/tasks/<int:id>', methods=['GET'])
+def get_task(id):
+    for t in task_list:
+        if t.id == id:
+            return jsonify(t.to_dict())
+
+    return jsonify({"message": "Tarefa não encontrada!"}), 404
+
+#READ2____________________________________________________________________________
+
+#@app.route('/user/<username>')
+#def show_user(username):
+#    print(username)
+#   print(type(username))
+#    return username
+
+
+#UPADATE____________________________________________________________________________
+
+@app.route('/tasks/<int:id>', methods=['PUT'])
+def update_task(id):
+    task = None
+    for t in task_list:
+        if t.id == id:
+            task = t
+            break
+    print(task)
+    if task == None:
+        return jsonify({"message": "Tarefa não encontrada!"}), 404
+
+    data = request.get_json()
+    task.title = data['title']
+    task.description = data['description']
+    task.completed = data['completed']
+    print(task)
+    return jsonify({"message": "Tarefa atualizada com sucesso!"})
+
+#DELETE____________________________________________________________________________
+
+@app.route('/tasks/<int:id>', methods=['DELETE'])
+def delete_task(id):
+    task = None
+    for t in task_list:
+        if t.id == id:
+            task = t
+            break
+    print(task)
+    if task == None:
+        return jsonify({"message": "Tarefa não encontrada!"}), 404
+
+    task_list.remove(task)
+    return jsonify({"message": "Tarefa deletada com sucesso!"})
+
+
+if __name__ == '__main__':  
     app.run(debug=True)  # Esse é o método que inicia a aplicação. Ele é utilizado para iniciar o servidor web e permitir que a aplicação seja acessada pelo navegador. O parâmetro debug=True é utilizado para habilitar o modo de depuração, que permite que a aplicação seja reiniciada automaticamente quando houver alterações no código.
