@@ -18,7 +18,7 @@ def create_task():
     task_list.append(new_task)
     task_id_control += 1
     print(task_list)
-    return jsonify({"message": "Nova tarefa criada com sucesso!"})
+    return jsonify({"message": "Nova tarefa criada com sucesso!", "id": new_task.id})
 
 #GET____________________________________________________________________________
 
